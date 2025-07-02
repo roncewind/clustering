@@ -1,5 +1,3 @@
-
-
 # python gmm_analysis.py --csv "<path_to_your_csv_file>.csv" --label_col label --max_components 20 --output_dir "<path_to_output_directory>"
 # python gmm_analysis.py --csv "data/all_features.csv" --label_col label --max_components 33 --output_dir "data"
 
