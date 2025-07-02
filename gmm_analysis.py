@@ -89,24 +89,27 @@ def run_gmm_analysis(
     best_config = {}
 
     # Fit models
-    total_elapsed_time = 0
+    fitting_start_time = pd.Timestamp.now()
     for cv_type in cv_types:
         cv_type_time = pd.Timestamp.now()
         elapsed_time = 0
         print(f"Fitting GMM with covariance type: {cv_type} at {cv_type_time}")
         for n_components in n_components_range:
             start_comp_time = pd.Timestamp.now()
-            total_elapsed_time += elapsed_time
-            if elapsed_time > 0:
-                print(
-                    f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {format_seconds_to_hhmmss(total_elapsed_time)}",
-                    end="\r",
-                )
-            else:
-                print(
-                    f"  Number of components: {n_components}/{max_components} ",
-                    end="\r",
-                )
+            print(
+                f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {format_seconds_to_hhmmss((pd.Timestamp.now() - fitting_start_time).total_seconds())}",
+                end="\r",
+            )
+            # if elapsed_time > 0:
+            #     print(
+            #         f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {(pd.Timestamp.now() - fitting_start_time).total_seconds()}",
+            #         end="\r",
+            #     )
+            # else:
+            #     print(
+            #         f"  Number of components: {n_components}/{max_components} ",
+            #         end="\r",
+            #     )
             gmm = GaussianMixture(
                 n_components=n_components,
                 covariance_type=cv_type,
