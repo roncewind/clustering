@@ -12,6 +12,15 @@ from sklearn.preprocessing import StandardScaler
 
 # =============================================================================
 #
+def format_seconds_to_hhmmss(seconds):
+    """Convert seconds to a formatted string of HH:MM:SS."""
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+
+
+# =============================================================================
+#
 def get_column_labels(file_path):
     if not os.path.exists(file_path):
         print(f"❌ Error: the class label file '{file_path}' does not exist.")
@@ -42,7 +51,9 @@ def load_csv_file(csv_path):
 
 # =============================================================================
 #
-def run_gmm_analysis(df, feature_cols, label_col, max_components, output_dir):
+def run_gmm_analysis(
+    df, feature_cols, label_col, min_components, max_components, output_dir
+):
     os.makedirs(output_dir, exist_ok=True)
 
     print("Running GMM analysis...")
@@ -55,7 +66,6 @@ def run_gmm_analysis(df, feature_cols, label_col, max_components, output_dir):
     X_scaled = scaler.fit_transform(X)
 
     # Initialize variables
-    min_components = len(feature_cols) // 3
     print("Initializing GMM parameters...")
     print(f"Number of features: {X_scaled.shape[1]}")
     print(f"Number of samples: {X_scaled.shape[0]}")
@@ -77,9 +87,21 @@ def run_gmm_analysis(df, feature_cols, label_col, max_components, output_dir):
 
     # Fit models
     for cv_type in cv_types:
-        print(f"Fitting GMM with covariance type: {cv_type}")
+        cv_type_time = pd.Timestamp.now()
+        elapsed_time = 0
+        print(f"Fitting GMM with covariance type: {cv_type} at {cv_type_time}")
         for n_components in n_components_range:
-            print(f"  Number of components: {n_components}/{max_components}", end="\r")
+            start_comp_time = pd.Timestamp.now()
+            if elapsed_time > 0:
+                print(
+                    f"  Number of components: {n_components}/{max_components}: Time elapsed for previous components: {format_seconds_to_hhmmss(elapsed_time)}",
+                    end="\r",
+                )
+            else:
+                print(
+                    f"  Number of components: {n_components}/{max_components} ",
+                    end="\r",
+                )
             gmm = GaussianMixture(
                 n_components=n_components,
                 covariance_type=cv_type,
@@ -100,6 +122,7 @@ def run_gmm_analysis(df, feature_cols, label_col, max_components, output_dir):
                     "bic": bic,
                     "aic": aic,
                 }
+            elapsed_time = (pd.Timestamp.now() - start_comp_time).total_seconds()
         print("\n ...fitting complete.")
 
     # Predict using the best model
@@ -168,6 +191,17 @@ if __name__ == "__main__":
     parser.add_argument("--csv", required=True, help="Path to input CSV file")
     parser.add_argument("--label_col", required=True, help="Name of the label column")
     parser.add_argument(
+        "--label_file",
+        required=False,
+        default="data/class_labels.txt",
+        help="Path to the label file, default is 'data/class_labels.txt'",
+    )
+    parser.add_argument(
+        "--min_components",
+        type=int,
+        help="Minimum number of GMM components to try, defaults to 1/3 of feature columns",
+    )
+    parser.add_argument(
         "--max_components",
         type=int,
         default=20,
@@ -177,15 +211,28 @@ if __name__ == "__main__":
         "--output_dir", default="gmm_output", help="Directory to save output results"
     )
 
+    start_time = pd.Timestamp.now()
+    print(f"Starting GMM analysis at {start_time}")
     args = parser.parse_args()
-    label_file = "data/class_labels.txt"
-    feature_columns = get_column_labels(label_file)
+    feature_columns = get_column_labels(args.label_file)
+    min_components = len(feature_columns) // 3
+    if args.min_components is not None:
+        min_components = args.min_components
 
     df = load_csv_file(args.csv)
     # Run the analysis
     run_gmm_analysis(
-        df, feature_columns, args.label_col, args.max_components, args.output_dir
+        df,
+        feature_columns,
+        args.label_col,
+        min_components,
+        args.max_components,
+        args.output_dir,
+    )
+    print(f"Finished GMM analysis at {pd.Timestamp.now()}")
+    print(
+        f"Total time taken: {format_seconds_to_hhmmss((pd.Timestamp.now() - start_time).total_seconds())} seconds"
     )
 
-# python gmm_cluster.py --csv "<path_to_your_csv_file>.csv" --label_col label --max_components 20 --output_dir "<path_to_output_directory>"
-# python gmm_cluster.py --csv "data/all_features.csv" --label_col label --max_components 20 --output_dir "data"
+# python gmm_analysis.py --csv "<path_to_your_csv_file>.csv" --label_col label --max_components 20 --output_dir "<path_to_output_directory>"
+# python gmm_analysis.py --csv "data/all_features.csv" --label_col label --max_components 33 --output_dir "data"
