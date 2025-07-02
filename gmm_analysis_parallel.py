@@ -1,4 +1,5 @@
 # python gmm_analysis_parallel.py --csv "data/all_features.csv" --label_col label --min_components 11 --max_components 12 --output_dir "data" --n_jobs 8
+# python gmm_analysis_parallel.py --csv ~/senzing-garage.git/bizname-research/spike/ron/nn-data/data/all_features.csv  --label_col label  --min_components 11 --max_components 132 --output_dir "data" --n_jobs 10
 import argparse
 import os
 from contextlib import contextmanager
