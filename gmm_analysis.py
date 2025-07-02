@@ -89,15 +89,17 @@ def run_gmm_analysis(
     best_config = {}
 
     # Fit models
+    total_elapsed_time = 0
     for cv_type in cv_types:
         cv_type_time = pd.Timestamp.now()
         elapsed_time = 0
         print(f"Fitting GMM with covariance type: {cv_type} at {cv_type_time}")
         for n_components in n_components_range:
             start_comp_time = pd.Timestamp.now()
+            total_elapsed_time += elapsed_time
             if elapsed_time > 0:
                 print(
-                    f"  Number of components: {n_components}/{max_components}: Time elapsed for previous components: {format_seconds_to_hhmmss(elapsed_time)}",
+                    f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {format_seconds_to_hhmmss(total_elapsed_time)}",
                     end="\r",
                 )
             else:
