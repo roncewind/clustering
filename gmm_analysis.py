@@ -100,16 +100,6 @@ def run_gmm_analysis(
                 f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {format_seconds_to_hhmmss((pd.Timestamp.now() - fitting_start_time).total_seconds())}",
                 end="\r",
             )
-            # if elapsed_time > 0:
-            #     print(
-            #         f"  Number of components: {n_components}/{max_components}: Previous component time: {format_seconds_to_hhmmss(elapsed_time)}, total time: {(pd.Timestamp.now() - fitting_start_time).total_seconds()}",
-            #         end="\r",
-            #     )
-            # else:
-            #     print(
-            #         f"  Number of components: {n_components}/{max_components} ",
-            #         end="\r",
-            #     )
             gmm = GaussianMixture(
                 n_components=n_components,
                 covariance_type=cv_type,
